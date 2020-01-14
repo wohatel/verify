@@ -3,6 +3,10 @@ package com.murong.val.verify;
 
 import java.lang.annotation.*;
 
+/**
+ * using on field of a java object which is tag by @RequestBody
+ * always compare whith number ,the value is limit to max
+ */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
