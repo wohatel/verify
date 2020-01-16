@@ -9,6 +9,6 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ValNoneNull {
+public @interface ValNotNull {
     String msg() default "";
 }

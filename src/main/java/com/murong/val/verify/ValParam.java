@@ -14,6 +14,8 @@ public @interface ValParam {
 
     boolean nullAble() default false;
 
+    boolean blankAble() default true;
+
     String max() default "";
 
     String min() default "";
