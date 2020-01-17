@@ -31,7 +31,8 @@ import java.util.Map;
 @Configuration
 public class Aspects {
 
-    private static final int errorCode = 0;
+    private static final int parameterCode = -900;
+    private static final int bodyCode = -600;
 
     @Pointcut("@within(org.springframework.stereotype.Controller) || @within(org.springframework.web.bind.annotation.RestController)")
     public void controller() {
@@ -91,7 +92,7 @@ public class Aspects {
                     if (StringUtils.isBlank(valParam.msg())) {
                         msg = field.getName() + ":" + "is null";
                     }
-                    throw new BusinessException(errorCode, msg);
+                    throw new BusinessException(bodyCode, msg);
                 }
             }
             // 正则
@@ -107,7 +108,7 @@ public class Aspects {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "malformed ";
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
                 }
             }
@@ -123,19 +124,19 @@ public class Aspects {
                     BigDecimal decimal = new BigDecimal(value.toString());
                     int i1 = decimal.compareTo(min);
                     String msg = valParam.msg();
-                    if (valParam.contains && i1 < 0) {
+                    if (valParam.contains() && i1 < 0) {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "can not less than "
                                     + fieldValue;
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
-                    if (!valParam.contains && i1 <= 0) {
+                    if (!valParam.contains() && i1 <= 0) {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "can not less than or equal to "
                                     + fieldValue;
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
                 }
             }
@@ -151,19 +152,19 @@ public class Aspects {
                     BigDecimal decimal = new BigDecimal(value.toString());
                     int i1 = decimal.compareTo(max);
                     String msg = valParam.msg();
-                    if (valParam.contains && i1 > 0) {
+                    if (valParam.contains() && i1 > 0) {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "can not greater to "
                                     + fieldValue;
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
-                    if (!valParam.contains && i1 >= 0) {
+                    if (!valParam.contains() && i1 >= 0) {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "can not greater or equal to "
                                     + fieldValue;
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
                 }
             }
@@ -181,23 +182,25 @@ public class Aspects {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "error with ranges";
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
                 }
             }
 
-            // valStringLen
+            // valNoneBlank
             boolean valNoneBlank = field
                     .isAnnotationPresent(ValNotBlank.class);
             if (valNoneBlank) {
-                ValNotBlank valParam = field
-                        .getAnnotationsByType(ValNotBlank.class)[0];
-                if (value == null || value.toString().trim().length() == 0) {
-                    String msg = valParam.msg();
-                    if (StringUtils.isBlank(valParam.msg())) {
-                        msg = field.getName() + ":" + "is blank";
+                if (value != null) {
+                    ValNotBlank valParam = field
+                            .getAnnotationsByType(ValNotBlank.class)[0];
+                    if (value.toString().trim().length() == 0) {
+                        String msg = valParam.msg();
+                        if (StringUtils.isBlank(valParam.msg())) {
+                            msg = field.getName() + ":" + "is blank";
+                        }
+                        throw new BusinessException(bodyCode, msg);
                     }
-                    throw new BusinessException(errorCode, msg);
                 }
 
             }
@@ -217,7 +220,7 @@ public class Aspects {
                         if (StringUtils.isBlank(valParam.msg())) {
                             msg = field.getName() + ":" + "error with string length ranges";
                         }
-                        throw new BusinessException(errorCode, msg);
+                        throw new BusinessException(bodyCode, msg);
                     }
                 }
             }
@@ -248,11 +251,23 @@ public class Aspects {
         String name = parameter.getName();
         boolean isNullVap = valparam.nullAble();
         if (!isNullVap && arg == null) {
-            throw new BusinessException(errorCode, name + ": can not be null");
+            throw new BusinessException(parameterCode, name + ": can not be null");
         }
         if (arg == null) {
             return;
         }
+        // 正则
+        if (!StringUtils.isBlank(valparam.expression())) {
+            final boolean matches = arg.toString().matches(valparam.expression());
+            if (!matches) {
+                String msg = valparam.msg();
+                if (StringUtils.isBlank(valparam.msg())) {
+                    msg = name + ":" + " malformed ";
+                }
+                throw new BusinessException(parameterCode, msg);
+            }
+        }
+
         // 最小
         if (!StringUtils.isBlank(valparam.min())) {
             BigDecimal min = new BigDecimal(valparam.min());
@@ -263,13 +278,13 @@ public class Aspects {
                 if (StringUtils.isBlank(msg)) {
                     msg = name + ":" + "can not less than " + valparam.min();
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
             if (!valparam.minContains() && i1 <= 0) {
                 if (StringUtils.isBlank(msg)) {
                     msg = name + ":" + "can not less than or equal to " + valparam.min();
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
         }
         // 最大
@@ -282,13 +297,13 @@ public class Aspects {
                 if (StringUtils.isBlank(msg)) {
                     msg = name + ":" + "can not greater to " + valparam.max();
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
             if (!valparam.maxContains() && i1 >= 0) {
                 if (StringUtils.isBlank(msg)) {
                     msg = name + ":" + "can not greater or equal to " + valparam.max();
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
         }
         // stringLenMin
@@ -299,7 +314,7 @@ public class Aspects {
                 if (StringUtils.isBlank(valparam.msg())) {
                     msg = name + ":" + "length can not less than " + min;
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
         }
         // stringLenMax
@@ -310,7 +325,7 @@ public class Aspects {
                 if (StringUtils.isBlank(valparam.msg())) {
                     msg = name + ":" + "length can not greater to " + max;
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
         }
 
@@ -321,7 +336,7 @@ public class Aspects {
                 if (StringUtils.isBlank(valparam.msg())) {
                     msg = name + ":" + "can not be blank";
                 }
-                throw new BusinessException(errorCode, msg);
+                throw new BusinessException(parameterCode, msg);
             }
         }
     }

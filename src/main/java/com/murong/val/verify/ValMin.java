@@ -22,7 +22,7 @@ public @interface ValMin {
     /**
      * 闭区间,包含value  1 >= min
      */
-    boolean contains = true;
+    boolean contains() default true;
 
     String msg() default "";
 }

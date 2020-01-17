@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ValMax {
+public @interface ValMax{
 
     /**
      * 最大
@@ -22,7 +22,7 @@ public @interface ValMax {
     /**
      * 闭区间,也就是包含value 1 <= max
      */
-    boolean contains = true;
+    boolean contains() default true;
 
     String msg() default "";
 
