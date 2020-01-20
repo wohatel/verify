@@ -31,6 +31,6 @@ public @interface ValParam {
     String strLenMax() default "";
 
     int errorCode() default 0;
-
+    
     String msg() default "";
 }

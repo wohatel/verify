@@ -11,6 +11,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.lang.reflect.Field;
@@ -19,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -191,8 +193,7 @@ public class Aspects {
             }
 
             // valNoneBlank
-            boolean valNoneBlank = field
-                    .isAnnotationPresent(ValNotBlank.class);
+            boolean valNoneBlank = field.isAnnotationPresent(ValNotBlank.class);
             if (valNoneBlank) {
                 if (value != null) {
                     ValNotBlank valParam = field
@@ -209,8 +210,7 @@ public class Aspects {
             }
 
             // valStringLen
-            boolean valStringLen = field
-                    .isAnnotationPresent(ValStringLen.class);
+            boolean valStringLen = field.isAnnotationPresent(ValStringLen.class);
             if (valStringLen) {
                 if (value != null) {
                     ValStringLen valParam = field
@@ -226,6 +226,29 @@ public class Aspects {
                         throw new BusinessException(bodyCode, msg);
                     }
                 }
+            }
+
+            // ValNotEmpty
+            boolean valNotEmpty = field.isAnnotationPresent(ValNotEmpty.class);
+            if (valNotEmpty) {
+                if (value != null) {
+                    ValNotEmpty valParam = field
+                            .getAnnotationsByType(ValNotEmpty.class)[0];
+                    boolean isEmpty = true;
+                    if (value instanceof Collection) {
+                        isEmpty = CollectionUtils.isEmpty((Collection) value);
+                    } else if (value instanceof Map) {
+                        isEmpty = CollectionUtils.isEmpty((Map) value);
+                    }
+                    if (isEmpty) {
+                        String msg = valParam.msg();
+                        if (StringUtils.isBlank(valParam.msg())) {
+                            msg = field.getName() + ":" + "is empty";
+                        }
+                        throw new BusinessException(bodyCode, msg);
+                    }
+                }
+
             }
 
         }
@@ -343,5 +366,6 @@ public class Aspects {
                 throw new BusinessException(parameterCode, msg);
             }
         }
+        
     }
 }
