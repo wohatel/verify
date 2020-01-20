@@ -31,9 +31,6 @@ import java.util.Map;
 @Configuration
 public class Aspects {
 
-    private static final int parameterCode = -900;
-    private static final int bodyCode = -600;
-
     @Pointcut("@within(org.springframework.stereotype.Controller) || @within(org.springframework.web.bind.annotation.RestController)")
     public void controller() {
     }
@@ -82,6 +79,12 @@ public class Aspects {
         for (int j = 0; j < fields.length; j++) {
             final Field field = fields[j];
             final Object value = map.get(field.getName());
+            int bodyCode = 0;
+            boolean valErrorCode = field.isAnnotationPresent(ValErrorCode.class);
+            if (valErrorCode) {
+                ValErrorCode code = field.getAnnotationsByType(ValErrorCode.class)[0];
+                bodyCode = code.value();
+            }
             // 非空
             boolean valNull = field.isAnnotationPresent(ValNotNull.class);
             if (valNull) {
@@ -248,6 +251,7 @@ public class Aspects {
      * @param parameter
      */
     public void verfyParam(ValParam valparam, Object arg, Parameter parameter) {
+        int parameterCode = valparam.errorCode();
         String name = parameter.getName();
         boolean isNullVap = valparam.nullAble();
         if (!isNullVap && arg == null) {
