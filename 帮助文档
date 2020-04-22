@@ -1,0 +1,97 @@
+======================== 对于requestbody的校验使用 ======================
+@ValErrorCode
+@ValExpression
+@ValIn
+@ValMax
+@ValMethod
+@ValMin
+@ValNotBlank
+@ValNotEmpty
+@ValNotNull
+@ValStringLen
+
+举例说明:
+     /**
+     * 添加用户
+     *
+     * @param jwtUser
+     * @param addUser
+     * @return
+     */
+    @RequestMapping(value = "/users", method = RequestMethod.POST)
+    public Object addUser(@RequestBody AddUser addUser) {
+        // 只有管理员能添加普通用户，超管才能添加管理员
+        .......
+    }
+    
+    /**
+ * @author Mr.Y
+ * @time 2019/9/9/9:52
+ */
+public class AddUser {
+
+    @ValNotNull(msg = "用户名不能为空")                ---// 校验非空
+    @ValStringLen(min = 15,max = 30)                ---//  字符串最小15个字符,最大30个字符
+    private String userName;
+
+    @ValNotNull(msg = "用户初始密码不能为空")
+    @ValExpression(value = RegConst.PASSWORD, msg = "密码需要6-16位非空字符")    ----// 校验正则表达式
+    private String initPw;
+
+    @ValNotNull(msg = "用户角色不能为空")
+    private RoleType role;
+    
+    @ValMin("15",contains = false)                                    ---// 年龄最小15,不包含15岁
+    private int age;
+    
+    @ValNotEmpty                                                      ---// 集合不能为empty
+    private List list;
+    
+    
+    @ValMethod                                                        ---//如果有些字段不容易被校验,可以直接定义一个方法,写上校验逻辑即可
+    public void val(){
+       if(role.name() == "admin"){
+         throw new RuntimeExeception();
+       }
+    }
+    
+}
+
+
+
+================================   校验非body参数   ==========================
+
+@Target({ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ValParam {
+
+    boolean nullAble() default false;
+
+    boolean blankAble() default true;
+
+    String expression() default "";
+
+    String max() default "";
+
+    String min() default "";
+
+    boolean maxContains() default true;
+
+    boolean minContains() default true;
+
+    String strLenMin() default "";
+
+    String strLenMax() default "";
+
+    int errorCode() default 0;
+    
+    String msg() default "";
+}
+
+
+    @RequestMapping(value = "/users", method = RequestMethod.GET)
+    public Object getUserList(@ValParam(strLenMax = "10") String keyword, // keyword的最大长度为10
+                            Integer offset, Integer limit) {
+
+
